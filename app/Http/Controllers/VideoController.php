@@ -2,7 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Helpers\StorageHelper;
+use App\Http\Resources\VideoResource;
+use App\Models\Video;
+use Exception;
 use Illuminate\Http\Request;
+use Illuminate\Http\Response;
+use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class VideoController extends Controller
 {
@@ -11,7 +18,11 @@ class VideoController extends Controller
      */
     public function index()
     {
-        //
+        $videos = Video::with(['module'])->get();
+        return $this->sendResponse(
+            VideoResource::collection($videos),
+            'Videos retrieve succussfully!'
+        );
     }
 
     /**
@@ -27,7 +38,40 @@ class VideoController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'desc' => 'required',
+            'file' => 'required|file|mimes:mp4,mov,avi',
+            'module' => 'required',
+        ]);
+
+        if ($validator->fails()) {
+            $errorMessage = $validator->errors();
+            return $this->sendError(
+                'Error on your input',
+                $errorMessage,
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+
+        if ($request->file('file')->isValid()) {
+            $file = StorageHelper::store($request->file('file'), to: 'videos');
+            $video = new Video();
+            $video->name = $request->name;
+            $video->desc = $request->desc;
+            $video->duration = $request->duration;
+            $video->file = $file;
+            $video->module_id = $request->module;
+            $video->save();
+
+            return $this->sendResponse([], 'Video uploaded successfully!');
+        } else {
+            return $this->sendError(
+                'There\'s something error when uploading data!',
+                'Video uploaded failed!',
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
     }
 
     /**
@@ -59,6 +103,38 @@ class VideoController extends Controller
      */
     public function destroy(string $id)
     {
-        //
+        $video = Video::where('id', '=', $id)->first();
+    
+        if (!$video) {
+            return $this->sendError(
+                "Video not found!",
+                [],
+                Response::HTTP_NOT_FOUND
+            );
+        }
+    
+        try {
+            // Check if the file exists before trying to delete
+            if (Storage::exists($video->file)) {
+                Storage::delete($video->file);
+            } else {
+                return $this->sendError(
+                    "File not found!",
+                    [],
+                    Response::HTTP_NOT_FOUND
+                );
+            }
+            
+            $video->delete();
+        } catch (Exception $e) {
+            return $this->sendError(
+                "There's something wrong when deleting data!",
+                $e->getMessage(),
+                Response::HTTP_INTERNAL_SERVER_ERROR
+            );
+        }
+    
+        return $this->sendResponse([], 'Video deleted successfully!');
     }
+    
 }

@@ -35,6 +35,6 @@ Route::put('/v1/update-module/{id}', [ModuleController::class, 'update']);
 Route::delete('/v1/delete-module/{id}', [ModuleController::class, 'destroy']);
 
 Route::get('/v1/get-video', [VideoController::class, 'index']);
-Route::post('/v1/create-video', [VideoController::class, 'store']);
+Route::post('/v1/upload-video', [VideoController::class, 'store']);
 Route::put('/v1/upload-video/{id}', [VideoController::class, 'update']);
 Route::delete('/v1/delete-video/{id}', [VideoController::class, 'destroy']);

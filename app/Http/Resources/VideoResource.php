@@ -14,6 +14,13 @@ class VideoResource extends JsonResource
      */
     public function toArray(Request $request): array
     {
-        return parent::toArray($request);
+        return [
+            'id' => $this->id,
+            'module' => $this->whenLoaded('module'),
+            'name' => $this->name,
+            'desc' => $this->desc,
+            'duration' => $this->duration,
+            'file' => $this->file,
+        ];
     }
 }
