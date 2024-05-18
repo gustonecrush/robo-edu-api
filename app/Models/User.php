@@ -38,6 +38,6 @@ class User extends Authenticatable
 
     public function modules()
     {
-        return $this->hasMany('modules', 'user_id');
+        return $this->hasMany(Module::class, 'user_id');
     }
 }

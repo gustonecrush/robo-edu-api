@@ -14,9 +14,8 @@ class Category extends Model
     public $incrementing = false;
     public function modules()
     {
-        return $this->hasMany('modules', 'module_id');
+        return $this->hasMany(Module::class, 'module_id');
     }
-
     protected static function boot()
     {
         parent::boot();
