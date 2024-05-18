@@ -13,6 +13,13 @@ use Illuminate\Support\Facades\Validator;
 
 class VideoController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:api', [
+            'except' => ['index'],
+        ]);
+    }
+    
     /**
      * Display a listing of the resource.
      */
@@ -95,7 +102,53 @@ class VideoController extends Controller
      */
     public function update(Request $request, string $id)
     {
-        //
+        $validator = Validator::make($request->all(), [
+            'name' => 'required',
+            'desc' => 'required',
+            'file' => 'required|file|mimes:mp4,mov,avi',
+            'module' => 'required',
+        ]);
+    
+        if ($validator->fails()) {
+            $errorMessage = $validator->errors()->first('file'); 
+            return $this->sendError(
+                'Error',
+                $errorMessage,
+                Response::HTTP_BAD_REQUEST
+            );
+        }
+    
+        $video = Video::where('id', '=', $id)->first();
+    
+        if ($request->hasFile('file')) {
+            if ($request->file('file')->isValid()) {
+                // Delete the previous file if it exists
+                Storage::delete($video->file);
+    
+                // Store the new file
+                $file = StorageHelper::store($request->file('file'), to: 'videos');
+                $video->file = $file;
+            } else {
+                return $this->sendError(
+                    'Error',
+                    'Video uploaded failed, please check your file!',
+                    Response::HTTP_BAD_REQUEST
+                );
+            }
+        }
+    
+        // Update other fields
+        $video->name = $request->name;
+        $video->desc = $request->desc;
+        $video->duration = $request->duration;
+        $video->file = $file;
+        $video->module_id = $request->module;
+        $video->save();
+    
+        return $this->sendResponse(
+            $video,
+            'Content updated successfully!'
+        );
     }
 
     /**

@@ -11,6 +11,13 @@ use Illuminate\Support\Facades\Validator;
 
 class ModuleController extends Controller
 {
+    public function __construct()
+    {
+        $this->middleware('auth:api', [
+            'except' => ['index'],
+        ]);
+    }
+
     /**
      * Display a listing of the resource.
      */

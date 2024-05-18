@@ -12,7 +12,7 @@ return new class extends Migration {
     {
         Schema::create('modules', function (Blueprint $table) {
             $table->uuid('id')->primary();
-            $table->bigInteger('user_id');
+            $table->foreignId('user_id');
             $table->uuid('category_id');
             $table->string('name');
             $table->timestamps();

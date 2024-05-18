@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\AuthController;
 use App\Http\Controllers\CategoryController;
 use App\Http\Controllers\ModuleController;
 use App\Http\Controllers\VideoController;
@@ -36,5 +37,10 @@ Route::delete('/v1/delete-module/{id}', [ModuleController::class, 'destroy']);
 
 Route::get('/v1/get-video', [VideoController::class, 'index']);
 Route::post('/v1/upload-video', [VideoController::class, 'store']);
-Route::put('/v1/upload-video/{id}', [VideoController::class, 'update']);
+Route::post('/v1/update-video/{id}', [VideoController::class, 'update']);
 Route::delete('/v1/delete-video/{id}', [VideoController::class, 'destroy']);
+
+Route::post('/v1/login', [AuthController::class, 'login']);
+Route::post('/v1/register', [AuthController::class, 'register']);
+Route::post('/v1/logout', [AuthController::class, 'logout']);
+Route::post('/v1/refresh', [AuthController::class, 'refresh']);
