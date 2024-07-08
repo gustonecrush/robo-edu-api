@@ -1,6 +1,7 @@
 <?php
 
 namespace App\Http\Controllers;
+
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -86,6 +87,40 @@ class AuthController extends Controller
                 'token' => Auth::refresh(),
                 'type' => 'bearer',
             ],
+        ]);
+    }
+
+    public function update(Request $request)
+    {
+        $request->validate([
+            'name' => 'sometimes|string|max:255',
+            'email' => 'sometimes|string|email|max:255|unique:users,email,' . Auth::id(),
+            'password' => 'sometimes|string|min:6',
+            'role' => 'sometimes|string',
+            'username' => 'sometimes|string|unique:users,username,' . Auth::id(),
+        ]);
+
+        $user = Auth::user();
+        $user->update($request->only(['name', 'email', 'password', 'role', 'username']));
+
+        if ($request->has('password')) {
+            $user->password = Hash::make($request->password);
+            $user->save();
+        }
+
+        return response()->json([
+            'status' => 'success',
+            'message' => 'User updated successfully',
+            'user' => $user,
+        ]);
+    }
+
+    public function getUserDetails()
+    {
+        $user = Auth::user();
+        return response()->json([
+            'status' => 'success',
+            'user' => $user,
         ]);
     }
 }

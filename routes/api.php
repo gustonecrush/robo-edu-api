@@ -44,3 +44,5 @@ Route::post('/v1/login', [AuthController::class, 'login']);
 Route::post('/v1/register', [AuthController::class, 'register']);
 Route::post('/v1/logout', [AuthController::class, 'logout']);
 Route::post('/v1/refresh', [AuthController::class, 'refresh']);
+Route::post('/v1/update', [AuthController::class, 'update']);
+Route::get('/v1/user', [AuthController::class, 'getUserDetails']);
