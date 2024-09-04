@@ -15,21 +15,18 @@ return new class extends Migration {
             $table->foreignId('user_id');
             $table->uuid('category_id');
             $table->string('name');
+            $table->string('file');
             $table->timestamps();
 
             $table
                 ->foreign('user_id')
                 ->references('id')
-                ->on('users')
-                ->onDelete('CASCADE')
-                ->onUpdate('CASCADE');
+                ->on('users');
 
             $table
                 ->foreign('category_id')
                 ->references('id')
-                ->on('categories')
-                ->onDelete('CASCADE')
-                ->onUpdate('CASCADE');
+                ->on('categories');
         });
     }
 

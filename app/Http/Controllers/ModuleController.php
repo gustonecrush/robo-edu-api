@@ -43,10 +43,12 @@ class ModuleController extends Controller
      */
     public function store(Request $request)
     {
+        // Validate input data
         $validator = Validator::make($request->all(), [
             'name' => 'required',
             'category' => 'required',
             'contributor' => 'required',
+            'file' => 'nullable|file|mimes:jpg,png,pdf', // Validation for file input
         ]);
 
         if ($validator->fails()) {
@@ -63,6 +65,15 @@ class ModuleController extends Controller
             $module->name = $request->name;
             $module->category_id = $request->category;
             $module->user_id = $request->contributor;
+
+            // Handle file upload if present
+            if ($request->hasFile('file')) {
+                $file = $request->file('file');
+                $filename = time() . '.' . $file->getClientOriginalExtension();
+                $file->storeAs('public/modules', $filename); // Store file in 'storage/app/public/modules'
+                $module->file = $filename; // Save the file path in the database
+            }
+
             $module->save();
         } catch (Exception $e) {
             return $this->sendError(
@@ -74,6 +85,7 @@ class ModuleController extends Controller
 
         return $this->sendResponse([], 'Module created successfully!');
     }
+
 
     /**
      * Display the specified resource.
@@ -96,14 +108,31 @@ class ModuleController extends Controller
      */
     public function update(Request $request, string $id)
     {
+        // Check if the module exists
         if (Module::where('id', '=', $id)->exists()) {
-            $module = Module::where('id', '=', $id)->first();
-            $module->name = is_null($request->name)
-                ? $module->name
-                : $request->name;
-            $module->category_id = is_null($request->category)
-                ? $module->category_id
-                : $request->category;
+            $module = Module::find($id);
+
+            // Update module fields
+            $module->name = $request->name ?? $module->name;
+            $module->category_id = $request->category ?? $module->category_id;
+
+            // Handle file upload if a new file is provided
+            if ($request->hasFile('file')) {
+                // Delete the old file if it exists
+                if ($module->file_path) {
+                    $oldFilePath = storage_path('app/public/modules/' . $module->file_path);
+                    if (file_exists($oldFilePath)) {
+                        unlink($oldFilePath); // Remove the old file
+                    }
+                }
+
+                // Store the new file
+                $file = $request->file('file');
+                $filename = time() . '.' . $file->getClientOriginalExtension();
+                $file->storeAs('public/modules', $filename); // Store file in 'storage/app/public/modules'
+                $module->file = $filename; // Update the file path in the database
+            }
+
             $module->save();
 
             return $this->sendResponse([], 'Module updated successfully!');
@@ -116,14 +145,34 @@ class ModuleController extends Controller
         }
     }
 
+
     /**
      * Remove the specified resource from storage.
      */
     public function destroy(string $id)
     {
-        $module = Module::where('id', '=', $id)->first();
+        // Retrieve the module record
+        $module = Module::find($id);
+
+        if (!$module) {
+            return $this->sendError(
+                'Module not found',
+                'The specified module does not exist.',
+                Response::HTTP_NOT_FOUND
+            );
+        }
 
         try {
+            // Delete the associated file if it exists
+            if ($module->file_path) {
+                $filePath = storage_path('app/public/modules/' . $module->file_path);
+
+                if (file_exists($filePath)) {
+                    unlink($filePath); // Remove the file from storage
+                }
+            }
+
+            // Delete the module record
             $module->delete();
         } catch (Exception $e) {
             return $this->sendError(

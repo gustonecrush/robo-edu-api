@@ -19,6 +19,7 @@ class ModuleResource extends JsonResource
             'category' => $this->whenLoaded('category'),
             'contributor' => $this->whenLoaded('user'),
             'name' => $this->name,
+            'file' => $this->file,
         ];
     }
 }
