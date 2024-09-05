@@ -21,14 +21,25 @@ class ModuleController extends Controller
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $categories = Module::with(['user', 'category'])->get();
+        // Check if 'user_id' query param is present
+        $query = Module::with(['user', 'category']);
+
+        if ($request->has('user_id')) {
+            // Filter modules by 'user_id'
+            $query->where('user_id', $request->user_id);
+        }
+
+        // Get the result
+        $modules = $query->get();
+
         return $this->sendResponse(
-            ModuleResource::collection($categories),
-            'Modules retrieve succussfully!'
+            ModuleResource::collection($modules),
+            'Modules retrieved successfully!'
         );
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -70,7 +81,7 @@ class ModuleController extends Controller
             if ($request->hasFile('file')) {
                 $file = $request->file('file');
                 $filename = time() . '.' . $file->getClientOriginalExtension();
-                $file->storeAs('public/modules', $filename); // Store file in 'storage/app/public/modules'
+                $file->storeAs('modules', $filename); // Store file in 'storage/app/public/modules'
                 $module->file = $filename; // Save the file path in the database
             }
 
