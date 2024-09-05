@@ -140,7 +140,7 @@ class ModuleController extends Controller
                 // Store the new file
                 $file = $request->file('file');
                 $filename = time() . '.' . $file->getClientOriginalExtension();
-                $file->storeAs('public/modules', $filename); // Store file in 'storage/app/public/modules'
+                $file->storeAs('modules', $filename); // Store file in 'storage/app/public/modules'
                 $module->file = $filename; // Update the file path in the database
             }
 
