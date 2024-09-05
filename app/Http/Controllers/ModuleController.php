@@ -59,7 +59,7 @@ class ModuleController extends Controller
             'name' => 'required',
             'category' => 'required',
             'contributor' => 'required',
-            'file' => 'nullable|file|mimes:jpg,png,pdf', // Validation for file input
+            'file' => 'nullable|file|mimes:jpg,png,pdf|max:52400', // Validation for file input
         ]);
 
         if ($validator->fails()) {
