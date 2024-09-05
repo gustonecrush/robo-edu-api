@@ -55,21 +55,7 @@ class ModuleController extends Controller
     public function store(Request $request)
     {
         // Validate input data
-        $validator = Validator::make($request->all(), [
-            'name' => 'required',
-            'category' => 'required',
-            'contributor' => 'required',
-            'file' => 'nullable|file|mimes:jpg,png,pdf|max:52400', // Validation for file input
-        ]);
 
-        if ($validator->fails()) {
-            $errorMessage = $validator->errors();
-            return $this->sendError(
-                'Error on your input',
-                $errorMessage,
-                Response::HTTP_BAD_REQUEST
-            );
-        }
 
         try {
             $module = new Module();
