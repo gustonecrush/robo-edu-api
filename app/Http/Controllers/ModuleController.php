@@ -31,6 +31,12 @@ class ModuleController extends Controller
             $query->where('user_id', $request->user_id);
         }
 
+
+        if ($request->has('category_id')) {
+            // Filter modules by 'user_id'
+            $query->where('category_id', $request->category_id);
+        }
+
         // Get the result
         $modules = $query->get();
 
