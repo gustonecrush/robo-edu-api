@@ -39,7 +39,7 @@ class ModuleController extends Controller
 
         if ($request->has('module_id')) {
             // Filter modules by 'user_id'
-            $query->where('module_id', $request->module_id);
+            $query->where('id', $request->module_id);
         }
 
         // Get the result
