@@ -19,18 +19,28 @@ class VideoController extends Controller
             'except' => ['index'],
         ]);
     }
-    
+
     /**
      * Display a listing of the resource.
      */
-    public function index()
+    public function index(Request $request)
     {
-        $videos = Video::with(['module'])->get();
+        // Check if 'module_id' is present in the request
+        $moduleId = $request->query('module_id');
+
+        // Query videos, filter by 'module_id' if it exists
+        $videos = Video::with(['module'])
+            ->when($moduleId, function ($query, $moduleId) {
+                return $query->where('module_id', $moduleId);
+            })
+            ->get();
+
         return $this->sendResponse(
             VideoResource::collection($videos),
-            'Videos retrieve succussfully!'
+            'Videos retrieved successfully!'
         );
     }
+
 
     /**
      * Show the form for creating a new resource.
@@ -62,12 +72,21 @@ class VideoController extends Controller
         }
 
         if ($request->file('file')->isValid()) {
-            $file = StorageHelper::store($request->file('file'), to: 'videos');
+            // Get the uploaded file
+            $file = $request->file('file');
+
+            // Generate a unique filename to prevent overwriting
+            $filename = time() . '_' . uniqid() . '.' . $file->getClientOriginalExtension();
+
+            // Store the file with the unique filename
+            $filePath = $file->storeAs('videos', $filename, 'public');
+
+            // Save video details in the database
             $video = new Video();
             $video->name = $request->name;
             $video->desc = $request->desc;
             $video->duration = $request->duration;
-            $video->file = $file;
+            $video->file = $filePath;
             $video->module_id = $request->module;
             $video->save();
 
@@ -75,11 +94,12 @@ class VideoController extends Controller
         } else {
             return $this->sendError(
                 'There\'s something error when uploading data!',
-                'Video uploaded failed!',
+                'Video upload failed!',
                 Response::HTTP_INTERNAL_SERVER_ERROR
             );
         }
     }
+
 
     /**
      * Display the specified resource.
@@ -108,23 +128,23 @@ class VideoController extends Controller
             'file' => 'required|file|mimes:mp4,mov,avi',
             'module' => 'required',
         ]);
-    
+
         if ($validator->fails()) {
-            $errorMessage = $validator->errors()->first('file'); 
+            $errorMessage = $validator->errors()->first('file');
             return $this->sendError(
                 'Error',
                 $errorMessage,
                 Response::HTTP_BAD_REQUEST
             );
         }
-    
+
         $video = Video::where('id', '=', $id)->first();
-    
+
         if ($request->hasFile('file')) {
             if ($request->file('file')->isValid()) {
                 // Delete the previous file if it exists
                 Storage::delete($video->file);
-    
+
                 // Store the new file
                 $file = StorageHelper::store($request->file('file'), to: 'videos');
                 $video->file = $file;
@@ -136,7 +156,7 @@ class VideoController extends Controller
                 );
             }
         }
-    
+
         // Update other fields
         $video->name = $request->name;
         $video->desc = $request->desc;
@@ -144,7 +164,7 @@ class VideoController extends Controller
         $video->file = $file;
         $video->module_id = $request->module;
         $video->save();
-    
+
         return $this->sendResponse(
             $video,
             'Content updated successfully!'
@@ -157,7 +177,7 @@ class VideoController extends Controller
     public function destroy(string $id)
     {
         $video = Video::where('id', '=', $id)->first();
-    
+
         if (!$video) {
             return $this->sendError(
                 "Video not found!",
@@ -165,7 +185,7 @@ class VideoController extends Controller
                 Response::HTTP_NOT_FOUND
             );
         }
-    
+
         try {
             // Check if the file exists before trying to delete
             if (Storage::exists($video->file)) {
@@ -177,7 +197,7 @@ class VideoController extends Controller
                     Response::HTTP_NOT_FOUND
                 );
             }
-            
+
             $video->delete();
         } catch (Exception $e) {
             return $this->sendError(
@@ -186,8 +206,8 @@ class VideoController extends Controller
                 Response::HTTP_INTERNAL_SERVER_ERROR
             );
         }
-    
+
         return $this->sendResponse([], 'Video deleted successfully!');
     }
-    
+
 }
